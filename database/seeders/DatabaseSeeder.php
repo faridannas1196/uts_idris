@@ -4,11 +4,13 @@ namespace Database\Seeders;
 
 use App\Models\Dosen;
 use App\Models\Mahasiswa;
+use App\Models\Kelas;
 use App\Models\MataKuliah;
 use App\Models\ProgramStudi;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash; // Tambahkan ini
 
 class DatabaseSeeder extends Seeder
 {
@@ -37,13 +39,29 @@ class DatabaseSeeder extends Seeder
             ['nama' => 'Andi Pratama, M.Kom.', 'email' => 'andi.pratama@example.test'],
         );
 
-        MataKuliah::query()->firstOrCreate(
+        $mataKuliahPertama = MataKuliah::query()->firstOrCreate(
             ['kode' => 'IF101'],
             ['nama' => 'Pengantar Informatika', 'sks' => 3],
         );
-        MataKuliah::query()->firstOrCreate(
+        $mataKuliahKedua = MataKuliah::query()->firstOrCreate(
             ['kode' => 'IF102'],
             ['nama' => 'Algoritma dan Pemrograman', 'sks' => 4],
+        );
+        $mataKuliahPertama->programStudis()->syncWithoutDetaching([$programStudi->id]);
+        $mataKuliahKedua->programStudis()->syncWithoutDetaching([$programStudi->id]);
+        Kelas::query()->firstOrCreate(
+            ['kode' => 'IF101-A'],
+            [
+                'mata_kuliah_id' => $mataKuliahPertama->id,
+                'program_studi_id' => $programStudi->id,
+            ],
+        );
+        Kelas::query()->firstOrCreate(
+            ['kode' => 'IF102-A'],
+            [
+                'mata_kuliah_id' => $mataKuliahKedua->id,
+                'program_studi_id' => $programStudi->id,
+            ],
         );
 
         User::query()->firstOrCreate(
@@ -51,7 +69,7 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'Administrator SIKAD',
                 'email' => 'admin@example.test',
-                'password' => $demoPassword,
+                'password' => Hash::make('admin'),
                 'role' => 'admin',
             ],
         );
@@ -61,7 +79,7 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => $dosen->nama,
                 'email' => $dosen->email,
-                'password' => $demoPassword,
+                'password' => Hash::make('dosen'),
                 'role' => 'dosen',
             ],
         );
@@ -84,7 +102,7 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => $mahasiswa->nama,
                 'email' => $mahasiswa->email,
-                'password' => $demoPassword,
+                'password' => Hash::make('mahasiswa'),
                 'role' => 'mahasiswa',
             ],
         );

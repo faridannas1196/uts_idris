@@ -31,7 +31,7 @@
         <div class="container">
             <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="{{ auth()->check() ? route('dashboard') : route('login') }}">
                 <span class="brand-mark" aria-hidden="true">PS</span>
-                <span class="brand-copy">SIKAD <small>PERSIB BANDUNG</small></span>
+                <span class="brand-copy">SIKAD <small>PERSIB UNIVERSITY</small></span>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavigation" aria-controls="mainNavigation" aria-expanded="false" aria-label="Buka navigasi">
                 <span class="navbar-toggler-icon"></span>
@@ -41,7 +41,15 @@
                     @auth
                         <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">Beranda</a>
                         @if (auth()->user()->role === 'admin')
+                            <a class="nav-link {{ request()->routeIs('program-studi.*') ? 'active' : '' }}" href="{{ route('program-studi.index') }}">Program studi</a>
                             <a class="nav-link {{ request()->routeIs('mahasiswa.*') ? 'active' : '' }}" href="{{ route('mahasiswa.index') }}">Mahasiswa</a>
+                            <a class="nav-link {{ request()->routeIs('pengajar.*') ? 'active' : '' }}" href="{{ route('pengajar.index') }}">Pengajar</a>
+                            <a class="nav-link {{ request()->routeIs('mata-kuliah.*') ? 'active' : '' }}" href="{{ route('mata-kuliah.index') }}">Mata kuliah</a>
+                            <a class="nav-link {{ request()->routeIs('kelas.*') ? 'active' : '' }}" href="{{ route('kelas.index') }}">Kelas</a>
+                        @elseif (auth()->user()->role === 'dosen')
+                            <a class="nav-link {{ request()->routeIs('dosen.kelas') ? 'active' : '' }}" href="{{ route('dosen.kelas') }}">Kelas saya</a>
+                        @elseif (auth()->user()->role === 'mahasiswa')
+                            <a class="nav-link {{ request()->routeIs('mahasiswa.kelas') ? 'active' : '' }}" href="{{ route('mahasiswa.kelas') }}">KRS & kelas</a>
                         @endif
                         <span class="account-meta px-lg-2">ID {{ auth()->id() }} · {{ auth()->user()->username }} · {{ ucfirst(auth()->user()->role) }}</span>
                         <form method="POST" action="{{ route('logout') }}">
@@ -60,6 +68,12 @@
         @if (session('success'))
             <div class="alert alert-success alert-dismissible fade show" role="alert">
                 {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Tutup"></button>
+            </div>
+        @endif
+        @if (session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ session('error') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Tutup"></button>
             </div>
         @endif
