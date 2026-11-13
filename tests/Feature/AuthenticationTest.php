@@ -32,6 +32,12 @@ class AuthenticationTest extends TestCase
 
         $this->assertAuthenticatedAs($user);
 
+        $this->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('data-confirm-logout', false)
+            ->assertSee('Keluar dari akun?')
+            ->assertSee('Batal');
+
         $this->post(route('logout'))
             ->assertRedirect(route('login'));
 

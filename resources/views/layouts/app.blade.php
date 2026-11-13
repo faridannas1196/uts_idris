@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', 'SIKAD') | Persib Akademik</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.22.0/dist/sweetalert2.min.css" rel="stylesheet">
     <style>
         :root { --persib-blue: #0b3d91; --persib-deep: #071d49; --persib-yellow: #ffd21c; --sikad-wash: #f3f6fb; --sikad-ink: #17243a; }
         body { background: var(--sikad-wash); color: var(--sikad-ink); }
@@ -24,6 +25,9 @@
         .form-control, .form-select, .btn { border-radius: .375rem; }
         .login-panel { border-top: 5px solid var(--persib-yellow); }
         .login-mark { color: var(--persib-blue); border-color: var(--persib-blue); background-color: #eef3fb; }
+        .swal2-popup { border-radius: .75rem; }
+        .swal2-toast { border-radius: .75rem; }
+        .swal2-confirm { background-color: var(--persib-blue) !important; }
     </style>
 </head>
 <body>
@@ -52,7 +56,7 @@
                             <a class="nav-link {{ request()->routeIs('mahasiswa.kelas') ? 'active' : '' }}" href="{{ route('mahasiswa.kelas') }}">KRS & kelas</a>
                         @endif
                         <span class="account-meta px-lg-2">ID {{ auth()->id() }} · {{ auth()->user()->username }} · {{ ucfirst(auth()->user()->role) }}</span>
-                        <form method="POST" action="{{ route('logout') }}">
+                        <form method="POST" action="{{ route('logout') }}" data-confirm-logout>
                             @csrf
                             <button type="submit" class="nav-link border-0 bg-transparent">Keluar</button>
                         </form>
@@ -65,22 +69,80 @@
     </nav>
 
     <main class="container py-4 py-md-5">
-        @if (session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Tutup"></button>
-            </div>
-        @endif
-        @if (session('error'))
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                {{ session('error') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Tutup"></button>
-            </div>
-        @endif
-
         @yield('content')
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.22.0/dist/sweetalert2.all.min.js"></script>
+    @php($flashNotifications = [
+        'success' => session('success'),
+        'error' => session('error'),
+        'warning' => session('warning'),
+        'info' => session('info'),
+    ])
+    <script>
+        (() => {
+            const toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 4500,
+                timerProgressBar: true,
+                didOpen: (toastElement) => {
+                    toastElement.addEventListener('mouseenter', Swal.stopTimer);
+                    toastElement.addEventListener('mouseleave', Swal.resumeTimer);
+                }
+            });
+
+            window.showSweetAlert = (options) => Swal.fire(options);
+            window.showToast = (icon, message) => toast.fire({ icon, titleText: message });
+
+            document.querySelectorAll('form[data-confirm-logout]').forEach((form) => {
+                form.addEventListener('submit', (event) => {
+                    if (form.dataset.confirmed === 'true') {
+                        return;
+                    }
+
+                    event.preventDefault();
+
+                    window.showSweetAlert({
+                        icon: 'question',
+                        title: 'Keluar dari akun?',
+                        text: 'Anda yakin ingin keluar?',
+                        showCancelButton: true,
+                        confirmButtonText: 'Ya, keluar',
+                        cancelButtonText: 'Batal',
+                        reverseButtons: true,
+                        focusCancel: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.dataset.confirmed = 'true';
+                            form.requestSubmit();
+                        }
+                    });
+                });
+            });
+
+            const showFlashNotifications = async () => {
+                const notifications = {{ Illuminate\Support\Js::from($flashNotifications) }};
+
+                for (const [icon, message] of Object.entries(notifications)) {
+                    if (message) {
+                        await window.showToast(icon, message);
+                    }
+                }
+            };
+
+            @if ($errors->any())
+                window.showSweetAlert({
+                    icon: 'warning',
+                    title: 'Validasi gagal',
+                    text: 'Periksa kembali data yang ditandai.'
+                }).then(showFlashNotifications);
+            @else
+                showFlashNotifications();
+            @endif
+        })();
+    </script>
 </body>
 </html>
